@@ -267,7 +267,7 @@ public class OpenAiChatClient implements ChatClient, StreamingChatClient {
 				&& prompt.getOptions() instanceof ChatCompletionRequest options) ? options : null;
 
 		ResponseEntity<ChatCompletion> completionEntity = this.chatCompletionWithTools(promptChatCompletionMessages,
-				promptOptions);
+				promptOptions, prompt.getToolCallbacks());
 
 		var chatCompletion = completionEntity.getBody();
 		if (chatCompletion == null) {
@@ -289,7 +289,13 @@ public class OpenAiChatClient implements ChatClient, StreamingChatClient {
 	}
 
 	private ResponseEntity<ChatCompletion> chatCompletionWithTools(
-			List<ChatCompletionMessage> promptChatCompletionMessages, ChatCompletionRequest promptOptions) {
+			List<ChatCompletionMessage> promptChatCompletionMessages, ChatCompletionRequest promptOptions,
+			List<ToolFunctionCallback> promptToolCallbacks) {
+
+		// Add the prompt tool callbacks to the tool callbacks catalog
+		if (!CollectionUtils.isEmpty(promptToolCallbacks)) {
+			promptToolCallbacks.stream().forEach(toolCallback -> this.withFunctionCallback(toolCallback));
+		}
 
 		OpenAiApi.ChatCompletionRequest request = createChatCompletionRequest(promptChatCompletionMessages,
 				promptOptions, false);
@@ -320,7 +326,7 @@ public class OpenAiChatClient implements ChatClient, StreamingChatClient {
 			conversationMessages.add(new ChatCompletionMessage(functionResponse, Role.tool, null, toolCall.id(), null));
 		}
 
-		return chatCompletionWithTools(conversationMessages, promptOptions);
+		return chatCompletionWithTools(conversationMessages, promptOptions, promptToolCallbacks);
 	}
 
 	private Boolean isToolCall(ResponseEntity<ChatCompletion> chatCompletion) {

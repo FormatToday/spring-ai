@@ -16,13 +16,16 @@
 
 package org.springframework.ai.prompt;
 
-import org.springframework.ai.model.ModelOptions;
-import org.springframework.ai.prompt.messages.Message;
-import org.springframework.ai.prompt.messages.UserMessage;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import org.springframework.ai.model.ModelOptions;
+import org.springframework.ai.model.ToolFunctionCallback;
+import org.springframework.ai.prompt.messages.Message;
+import org.springframework.ai.prompt.messages.UserMessage;
+import org.springframework.util.Assert;
 
 /**
  * A prompt is a list of messages that are used as input to the AI provider.
@@ -42,6 +45,8 @@ public class Prompt {
 	 * @see ModelOptions
 	 */
 	private ModelOptions options;
+
+	private List<ToolFunctionCallback> toolCallbacks = new ArrayList<>();
 
 	public Prompt(String contents) {
 		this(new UserMessage(contents));
@@ -77,6 +82,16 @@ public class Prompt {
 
 	public Prompt withOptions(ModelOptions options) {
 		this.options = options;
+		return this;
+	}
+
+	public List<ToolFunctionCallback> getToolCallbacks() {
+		return toolCallbacks;
+	}
+
+	public Prompt withToolCallback(ToolFunctionCallback callback) {
+		Assert.notNull(callback, "ToolFunctionCallback must not be null");
+		this.toolCallbacks.add(callback);
 		return this;
 	}
 
